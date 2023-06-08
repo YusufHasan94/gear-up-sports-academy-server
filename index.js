@@ -26,10 +26,16 @@ async function run() {
     //collections 
     const database = client.db("gear-up-sports");    
     const classes =  database.collection("classes");
+    const instructors = database.collection("instructors");
 
     //Route start from here 
     app.get("/classes", async(req, res)=>{
         const result = await classes.find().toArray();
+        res.send(result);
+    })
+
+    app.get("/instructors",async(req, res)=>{
+        const result = await instructors.find().toArray();
         res.send(result);
     })
 
