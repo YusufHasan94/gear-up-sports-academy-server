@@ -69,6 +69,14 @@ async function run() {
         const result = await users.updateOne(filter, updateDoc);
         res.send(result);
     })
+    app.get("/users/admin/:email", async(req, res)=>{
+        const email = req.params.email;
+        const query = {email: email};
+        const user = await users.findOne(query);
+        console.log(user);
+        const result = {admin: user?.role === 'admin'};
+        res.send(result);
+    })
     //instructor
     app.patch("/users/instructor/:id", async(req, res)=>{
         const id = req.params.id;
