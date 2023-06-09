@@ -27,6 +27,7 @@ async function run() {
     const database = client.db("gear-up-sports");    
     const classes =  database.collection("classes");
     const instructors = database.collection("instructors");
+    const users = database.collection("users");
 
     //Route start from here 
     app.get("/classes", async(req, res)=>{
@@ -36,6 +37,18 @@ async function run() {
 
     app.get("/instructors",async(req, res)=>{
         const result = await instructors.find().toArray();
+        res.send(result);
+    })
+
+    //user 
+    app.post("/users", async(req, res)=>{
+        const user = req.body;
+        const query = {email : user.email}
+        const exists = await users.findOne(query);
+        if(exists) {
+            return res.send({message: "user exists"})
+        }
+        const result = await users.insertOne(user);
         res.send(result);
     })
 
