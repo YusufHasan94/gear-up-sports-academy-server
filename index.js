@@ -28,6 +28,7 @@ async function run() {
     const classes =  database.collection("classes");
     const instructors = database.collection("instructors");
     const users = database.collection("users");
+    const selectedClass = database.collection("carts");
 
     //Route start from here 
     app.get("/classes", async(req, res)=>{
@@ -77,7 +78,7 @@ async function run() {
         const result = {admin: user?.role === 'admin'};
         res.send(result);
     })
-    
+
     //instructor
     app.patch("/users/instructor/:id", async(req, res)=>{
         const id = req.params.id;
@@ -94,8 +95,23 @@ async function run() {
         const email = req.params.email;
         const query = {email: email};
         const user = await users.findOne(query);
-        console.log(user);
         const result = {admin: user?.role === 'instructor'};
+        res.send(result);
+    })
+    //cart
+    app.post("/carts", async(req, res)=>{
+        const cls = req.body;
+        const result = await selectedClass.insertOne(cls);
+        res.send(result);
+    })
+    app.get("/carts", async(req, res)=>{
+        const email = req.query.email;
+        if(!email){
+            console.log("email not found");
+        }
+        const query = {email : email};
+        const result = await selectedClass.find(query).toArray();
+        console.log(result);
         res.send(result);
     })
 
