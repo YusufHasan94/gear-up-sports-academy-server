@@ -30,16 +30,7 @@ async function run() {
     const users = database.collection("users");
     const selectedClass = database.collection("carts");
 
-    //Route start from here 
-    app.get("/instructors",async(req, res)=>{
-        const result = await instructors.find().toArray();
-        res.send(result);
-    })
 
-    app.get("/classes", async(req, res)=>{
-        const result = await classes.find().toArray();
-        res.send(result);
-    })
 
     //user 
     app.post("/users", async(req, res)=>{
@@ -57,9 +48,16 @@ async function run() {
         const result = await users.find().toArray();
         res.send(result);
     })
+    //delete selected class from list 
+    app.delete("/carts/:id", async (req, res)=>{
+        const id = req.params.id;
+        const query = {_id: new ObjectId(id)};
+        const result = await selectedClass.deleteOne(query);
+        res.send(result);        
+    })
 
     //admin
-    app.patch("/admin/:id", async(req, res)=>{
+    app.patch("/users/admin/:id", async(req, res)=>{
         const id = req.params.id;
         const filter ={_id: new ObjectId(id)};
         const updateDoc ={
@@ -70,7 +68,7 @@ async function run() {
         const result = await users.updateOne(filter, updateDoc);
         res.send(result);
     })
-    app.get("/admin/:email", async(req, res)=>{
+    app.get("/users/admin/:email", async(req, res)=>{
         const email = req.params.email;
         const query = {email: email};
         const user = await users.findOne(query);
@@ -78,7 +76,7 @@ async function run() {
         res.send(result);
     })
     //approve cls by admin
-    app.patch("/classes/status/:id", async(req, res)=>{
+    app.patch("/classes/status/allow/:id", async(req, res)=>{
         const id = req.params.id;
         const filterCls = {_id: new ObjectId(id)};
         const updateDoc ={
@@ -89,9 +87,25 @@ async function run() {
         const result = await classes.updateOne(filterCls, updateDoc);
         res.send(result);
     })
+    app.patch("/classes/status/deny/:id", async(req, res)=>{
+        const id = req.params.id;
+        const filterCls = {_id: new ObjectId(id)};
+        const updateDoc ={
+            $set:{
+                status: 'denied'
+            },
+        };
+        const result = await classes.updateOne(filterCls, updateDoc);
+        res.send(result);
+    })
+    //get all classes requested by instructor
+    app.get("/classes/requested", async(req, res)=>{
+        const result = await classes.find().toArray();
+        res.send(result);
+    })
 
     //instructor
-    app.patch("/instructor/:id", async(req, res)=>{
+    app.patch("/users/instructor/:id", async(req, res)=>{
         const id = req.params.id;
         const filter ={_id: new ObjectId(id)};
         const updateDoc ={
@@ -102,7 +116,7 @@ async function run() {
         const result = await users.updateOne(filter, updateDoc);
         res.send(result);
     })
-    app.get("/instructor/:email", async(req, res)=>{
+    app.get("/users/instructor/:email", async(req, res)=>{
         const email = req.params.email;
         const query = {email: email};
         const user = await users.findOne(query);
@@ -116,7 +130,21 @@ async function run() {
     })
     app.get("/instructor/classes", async(req, res)=>{
         const email = req.query.email;
-        const query = {email: email};
+        const query = {instructorEmail: email};
+        const result = await classes.find(query).toArray();
+        console.log(query, result);
+        res.send(result);
+    })
+    //getting all instructors
+    app.get("/instructors", async(req, res)=>{
+        const role = req.query.role;
+        const query = {role: 'instructor'};
+        const result = await users.find(query).toArray();
+        res.send(result);
+    })
+    //get all approved classes
+    app.get("/classes", async(req, res)=>{
+        const query = {status: 'approved'}
         const result = await classes.find(query).toArray();
         res.send(result);
     })
@@ -136,7 +164,18 @@ async function run() {
         const result = await selectedClass.find(query).toArray();
         res.send(result);
     })
-
+    //dummy
+    app.get("/carts", async(req, res)=>{
+        const email = req.query.email;
+        const id = req.query.id;
+        if(!email){
+            console.log("email not found");
+            res.send([]);
+        }
+        const query = {_id: new ObjectId(id), email : email};
+        const result = await selectedClass.find(query).toArray();
+        res.send(result);
+    })
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
