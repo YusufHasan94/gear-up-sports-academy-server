@@ -26,9 +26,9 @@ async function run() {
     //collections 
     const database = client.db("gear-up-sports");    
     const classes =  database.collection("classes");
-    const instructors = database.collection("instructors");
     const users = database.collection("users");
     const selectedClass = database.collection("carts");
+    const reviews = database.collection('reviews');
 
 
 
@@ -164,18 +164,14 @@ async function run() {
         const result = await selectedClass.find(query).toArray();
         res.send(result);
     })
-    //dummy
-    app.get("/carts", async(req, res)=>{
-        const email = req.query.email;
-        const id = req.query.id;
-        if(!email){
-            console.log("email not found");
-            res.send([]);
-        }
-        const query = {_id: new ObjectId(id), email : email};
-        const result = await selectedClass.find(query).toArray();
+    //reviews
+    app.get("/reviews", async(req, res)=>{
+        const result = await reviews.find().toArray();
         res.send(result);
     })
+
+
+
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
