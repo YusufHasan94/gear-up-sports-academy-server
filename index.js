@@ -21,7 +21,7 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
-    await client.connect();
+    // await client.connect();
 
     //collections 
     const database = client.db("gear-up-sports");    
@@ -31,13 +31,13 @@ async function run() {
     const selectedClass = database.collection("carts");
 
     //Route start from here 
-    app.get("/classes", async(req, res)=>{
-        const result = await classes.find().toArray();
+    app.get("/instructors",async(req, res)=>{
+        const result = await instructors.find().toArray();
         res.send(result);
     })
 
-    app.get("/instructors",async(req, res)=>{
-        const result = await instructors.find().toArray();
+    app.get("/classes", async(req, res)=>{
+        const result = await classes.find().toArray();
         res.send(result);
     })
 
@@ -59,7 +59,7 @@ async function run() {
     })
 
     //admin
-    app.patch("/users/admin/:id", async(req, res)=>{
+    app.patch("/admin/:id", async(req, res)=>{
         const id = req.params.id;
         const filter ={_id: new ObjectId(id)};
         const updateDoc ={
@@ -70,17 +70,28 @@ async function run() {
         const result = await users.updateOne(filter, updateDoc);
         res.send(result);
     })
-    app.get("/users/admin/:email", async(req, res)=>{
+    app.get("/admin/:email", async(req, res)=>{
         const email = req.params.email;
         const query = {email: email};
         const user = await users.findOne(query);
-        console.log(user);
         const result = {admin: user?.role === 'admin'};
+        res.send(result);
+    })
+    //approve cls by admin
+    app.patch("/classes/status/:id", async(req, res)=>{
+        const id = req.params.id;
+        const filterCls = {_id: new ObjectId(id)};
+        const updateDoc ={
+            $set:{
+                status: 'approved'
+            },
+        };
+        const result = await classes.updateOne(filterCls, updateDoc);
         res.send(result);
     })
 
     //instructor
-    app.patch("/users/instructor/:id", async(req, res)=>{
+    app.patch("/instructor/:id", async(req, res)=>{
         const id = req.params.id;
         const filter ={_id: new ObjectId(id)};
         const updateDoc ={
@@ -91,11 +102,22 @@ async function run() {
         const result = await users.updateOne(filter, updateDoc);
         res.send(result);
     })
-    app.get("/users/instructor/:email", async(req, res)=>{
+    app.get("/instructor/:email", async(req, res)=>{
         const email = req.params.email;
         const query = {email: email};
         const user = await users.findOne(query);
         const result = {admin: user?.role === 'instructor'};
+        res.send(result);
+    })
+    app.post("/classes", async(req, res)=>{
+        const newClass = req.body;
+        const result = await classes.insertOne(newClass);
+        res.send(result);
+    })
+    app.get("/instructor/classes", async(req, res)=>{
+        const email = req.query.email;
+        const query = {email: email};
+        const result = await classes.find(query).toArray();
         res.send(result);
     })
     //cart
@@ -108,10 +130,10 @@ async function run() {
         const email = req.query.email;
         if(!email){
             console.log("email not found");
+            res.send([]);
         }
         const query = {email : email};
         const result = await selectedClass.find(query).toArray();
-        console.log(result);
         res.send(result);
     })
 
