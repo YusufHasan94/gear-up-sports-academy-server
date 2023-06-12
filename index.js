@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 require('dotenv').config();
+const stripe = require('stripe')(process.env.STRIPE_SK);
 const app = express();
 const port = process.env.PORT || 5000;
 app.use(cors());
@@ -29,6 +30,7 @@ async function run() {
     const users = database.collection("users");
     const selectedClass = database.collection("carts");
     const reviews = database.collection('reviews');
+    const payments = database.collection('payments');
 
 
 
@@ -132,7 +134,6 @@ async function run() {
         const email = req.query.email;
         const query = {instructorEmail: email};
         const result = await classes.find(query).toArray();
-        console.log(query, result);
         res.send(result);
     })
     //getting all instructors
@@ -164,6 +165,31 @@ async function run() {
         const result = await selectedClass.find(query).toArray();
         res.send(result);
     })
+    //payment route and intent
+
+    app.post("/create-payment-intent", async (req, res) => {
+        const { price } = req.body;
+        const amount = parseInt(price)*100;
+        const paymentIntent = await stripe.paymentIntents.create({
+            amount: amount,
+            currency: "usd",
+            payment_method_types: ['card']
+        });
+      
+        res.send({
+          clientSecret: paymentIntent.client_secret,
+        });
+    });
+
+    //payment route
+    app.post('/payments', async(req, res)=>{
+        const payment = req.body;
+        const insertResult = await payments.insertOne(payment);
+        const query = {_id: new ObjectId(payment.classId)};
+        const deleteResult = await selectedClass.deleteOne(query);
+        res.send({insertResult, deleteResult});
+    })
+
     //reviews
     app.get("/reviews", async(req, res)=>{
         const result = await reviews.find().toArray();
