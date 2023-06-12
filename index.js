@@ -190,6 +190,21 @@ async function run() {
         res.send({insertResult, deleteResult});
     })
 
+    //adding enrolled classes route
+    app.get('/enrolled', async(req, res)=>{
+        const email = req.query.email; 
+        if(!email){
+            res.send([]);
+        }
+        const options={
+            sort: {data: -1}
+        }
+        const query = {email: email};
+        const result = await payments.find(query, options).toArray();
+        res.send(result);
+    })
+
+
     //reviews
     app.get("/reviews", async(req, res)=>{
         const result = await reviews.find().toArray();
